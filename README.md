@@ -36,21 +36,21 @@ This will:
 
 ## Installation
 
-Clone this repo and add the plugin path to your Claude Code settings:
+This repo is a [Claude Code plugin marketplace](https://code.claude.com/docs/en/discover-plugins). Install plugins in two steps:
 
-```bash
-git clone https://github.com/rewinfrey/claude-plugins.git
+### 1. Add the marketplace
+
+```
+/plugin marketplace add rewinfrey/claude-plugins
 ```
 
-Then add to `~/.claude/settings.json`:
+### 2. Install a plugin
 
-```json
-{
-  "plugins": [
-    "/path/to/claude-plugins/plugins/session-logs/.claude-plugin"
-  ]
-}
 ```
+/plugin install session-logs@claude-plugins
+```
+
+After installation, the `/session-logs:scommit` command is immediately available. Run `/reload-plugins` if commands don't appear right away.
 
 ## Requirements
 

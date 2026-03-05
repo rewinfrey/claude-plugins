@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-plugins",
+  "version": "1.0.0",
+  "description": "Custom Claude Code plugins",
+  "owner": {
+    "name": "Rick Winfrey"
+  },
+  "plugins": [
+    {
+      "name": "session-logs",
+      "description": "Captures Claude Code session transcripts as structured Markdown logs alongside commits",
+      "version": "1.0.0",
+      "author": {
+        "name": "Rick Winfrey"
+      },
+      "source": "./plugins/session-logs",
+      "category": "development"
+    }
+  ]
+}
