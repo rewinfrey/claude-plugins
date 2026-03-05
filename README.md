@@ -47,7 +47,7 @@ This repo is a [Claude Code plugin marketplace](https://code.claude.com/docs/en/
 ### 2. Install a plugin
 
 ```
-/plugin install session-logs@claude-plugins
+/plugin install session-logs@rewinfrey-plugins
 ```
 
 After installation, the `/session-logs:scommit` command is immediately available. Run `/reload-plugins` if commands don't appear right away.
