@@ -1,5 +1,3 @@
 {
-  "enabledPlugins": {
-    "session-logs@rewinfrey-plugins": true
-  }
+  "enabledPlugins": {}
 }
