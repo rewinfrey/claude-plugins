@@ -174,6 +174,13 @@ for (const entry of entries) {
 
     // User text messages
     const text = extractText(content);
+
+    // Stop capturing once the scommit command is invoked — everything
+    // after this point is commit mechanics, not session content
+    if (text && text.includes("<command-name>/session-logs:scommit</command-name>")) {
+      break;
+    }
+
     if (text && !text.startsWith("[Request interrupted")) {
       conversationParts.push(`### User\n\n${truncate(text, 2000)}`);
     }
@@ -260,7 +267,6 @@ const frontmatter = [
   `  cache_creation: ${cacheCreation}`,
   `tool_calls: ${toolCallCount}`,
   `duration_minutes: ${durationMinutes}`,
-  `commit: ""`,
   `files_changed:`,
   ...filesChanged.map((f) => `  - "${f}"`),
   "---",
