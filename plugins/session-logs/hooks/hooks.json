@@ -1,0 +1,15 @@
+{
+  "description": "Session logs plugin hooks — injects session env vars on start",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks-handlers/session-env.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
