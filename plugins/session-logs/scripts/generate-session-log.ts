@@ -7,9 +7,9 @@
  * Markdown session log to .sessions/<timestamp>.md
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "fs";
 import { execFileSync } from "child_process";
-import { join } from "path";
+import { join, dirname } from "path";
 
 // ---------------------------------------------------------------------------
 // Env
@@ -72,22 +72,64 @@ interface TranscriptEntry {
   version?: string;
 }
 
-const raw = readFileSync(transcriptPath, "utf-8");
-const lines = raw.split("\n").filter(Boolean);
+// After context compaction, Claude Code creates a new internal conversation
+// with a new ID and writes to a new JSONL file. CLAUDE_TRANSCRIPT_PATH and
+// CLAUDE_SESSION_ID still reflect the original values. To capture the full
+// session, we need to:
+// 1. Find all JSONL files that contain our session ID
+// 2. Collect all conversation IDs from those files (the continuation IDs)
+// 3. Gather entries from any of those IDs across all files
+const projectDir = dirname(transcriptPath);
+const jsonlFiles = readdirSync(projectDir)
+  .filter((f) => f.endsWith(".jsonl"))
+  .map((f) => join(projectDir, f));
 
-const entries: TranscriptEntry[] = [];
-for (const line of lines) {
-  try {
-    const obj: TranscriptEntry = JSON.parse(line);
-    // Filter: correct session, has timestamp, after last commit
-    if (obj.sessionId !== sessionId) continue;
-    if (!obj.timestamp) continue;
-    if (lastCommitDate && new Date(obj.timestamp) <= lastCommitDate) continue;
-    entries.push(obj);
-  } catch {
-    // skip malformed lines
+// First pass: find all conversation IDs that share a file with our session ID
+const allSessionIds = new Set<string>([sessionId]);
+for (const filePath of jsonlFiles) {
+  const raw = readFileSync(filePath, "utf-8");
+  const lines = raw.split("\n").filter(Boolean);
+  let fileHasOurSession = false;
+  const fileSessionIds = new Set<string>();
+  for (const line of lines) {
+    try {
+      const obj = JSON.parse(line);
+      const sid = obj.sessionId;
+      if (!sid) continue;
+      if (sid === sessionId) fileHasOurSession = true;
+      fileSessionIds.add(sid);
+    } catch {
+      // skip malformed lines
+    }
+  }
+  // If this file contains our session, all IDs in it are continuations
+  if (fileHasOurSession) {
+    for (const sid of fileSessionIds) {
+      allSessionIds.add(sid);
+    }
   }
 }
+
+// Second pass: collect entries from all related session IDs
+const entries: TranscriptEntry[] = [];
+for (const filePath of jsonlFiles) {
+  const raw = readFileSync(filePath, "utf-8");
+  const lines = raw.split("\n").filter(Boolean);
+  for (const line of lines) {
+    try {
+      const obj: TranscriptEntry = JSON.parse(line);
+      if (!obj.sessionId || !allSessionIds.has(obj.sessionId)) continue;
+      if (!obj.timestamp) continue;
+      if (lastCommitDate && new Date(obj.timestamp) <= lastCommitDate) continue;
+      entries.push(obj);
+    } catch {
+      // skip malformed lines
+    }
+  }
+}
+
+// Sort by timestamp to ensure correct ordering across files
+entries.sort((a, b) => new Date(a.timestamp!).getTime() - new Date(b.timestamp!).getTime());
 
 if (entries.length === 0) {
   console.error("No transcript entries found for this session since last commit.");
